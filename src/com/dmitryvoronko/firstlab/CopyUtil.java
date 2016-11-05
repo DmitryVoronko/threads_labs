@@ -1,11 +1,10 @@
-package com.dmitryvoronko.lab;
+package com.dmitryvoronko.firstlab;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Created by Dmitry on 31/10/2016.
@@ -22,23 +21,22 @@ final class CopyUtil
             {
                 @Override public synchronized void run()
                 {
-                    try (final InputStream src0 = src)
-                    {              // 'src0' for auto-closing
+                    try
+                    {
                         while (true)
                         {
-
-
-                            final byte[] data = new byte[128];        // new data buffer
-                            final int count = src0.read(data, 1, 127); // read up to 127 bytes
-                            data[0] = (byte) count;             // 0-byte is length-field
+                            final byte[] data = new byte[128];
+                            final int count = src.read(data, 1, 127);
+                            data[0] = (byte) count;
                             buffer.put(data);
                             if (count == -1)
                             {
                                 break;
                             }
                         }
-                    } catch (final Exception ignored)
+                    } catch (final InterruptedException | IOException e)
                     {
+                        e.printStackTrace();
                     }
                 }
             };
@@ -46,27 +44,26 @@ final class CopyUtil
         });
 
         reader.start();
-        reader.setPriority(1);
-
 
         final Runnable runnable = new Runnable()
         {
             @Override public synchronized void run()
             {
-                try (final OutputStream dst0 = dst)
-                {      // 'dst0' for auto-closing
+                try
+                {
                     while (true)
                     {
-                        final byte[] data = buffer.take(); // get new data from reader
+                        final byte[] data = buffer.take();
                         if (data[0] == -1)
                         {
                             break;
-                        }  // its last data
-                        dst0.write(data, 1, data[0]);
+                        }
+                        dst.write(data, 1, data[0]);
                     }
-                } catch (final Exception ignored)
+                } catch (final InterruptedException | IOException e)
                 {
-                }  // interrupt writer
+                    e.printStackTrace();
+                }
             }
         };
 

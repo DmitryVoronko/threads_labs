@@ -1,4 +1,4 @@
-package com.dmitryvoronko.lab;
+package com.dmitryvoronko.firstlab;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -16,18 +16,23 @@ public class Test
         final Random rnd = new Random(0);
         final byte[] testData = new byte[64 * 1024];
         rnd.nextBytes(testData);
-        final ByteArrayOutputStream dst = new ByteArrayOutputStream();
-        CopyUtil.copy(new ByteArrayInputStream(testData), dst);
-        if (!Arrays.equals(testData, dst.toByteArray()))
+        try (ByteArrayOutputStream dst = new ByteArrayOutputStream())
         {
-            throw new AssertionError("Lab decision wrong!");
-        } else
-        {
-            System.out.println("OK!");
-//            displayData(testData);
-//            final byte[] resultData = dst.toByteArray();
-//            displayData(resultData);
+            try (ByteArrayInputStream src = new ByteArrayInputStream(testData))
+            {
+                CopyUtil.copy(src, dst);
+            }
+            if (!Arrays.equals(testData, dst.toByteArray()))
+            {
+                throw new AssertionError("Lab decision wrong!");
+            } else
+            {
+                System.out.println("OK!");
+//                displayData(testData);
+//                final byte[] resultData = dst.toByteArray();
+//                displayData(resultData);
 
+            }
         }
 
     }
