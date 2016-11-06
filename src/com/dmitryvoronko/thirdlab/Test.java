@@ -3,13 +3,14 @@ package com.dmitryvoronko.thirdlab;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.util.Arrays;
 import java.util.Random;
 
 /**
  * Created by Dmitry on 31/10/2016.
  */
-public class Test
+public final class Test
 {
     private static final int writersCount = 4;
 
@@ -19,7 +20,7 @@ public class Test
         byte[] testData = new byte[64 * 1024];
         rnd.nextBytes(testData);
 
-        ByteArrayOutputStream[] byteArrayOutputStreams = new ByteArrayOutputStream[writersCount];
+        final ByteArrayOutputStream[] byteArrayOutputStreams = new ByteArrayOutputStream[writersCount];
 
         for (int i = 0; i < writersCount; i++)
         {
@@ -28,7 +29,7 @@ public class Test
         }
 
 
-        CopyUtil.copy(new ByteArrayInputStream(testData), byteArrayOutputStreams);
+        CopyUtil.copy(new ByteArrayInputStream(testData), (OutputStream[]) byteArrayOutputStreams);
 
 
         for (int i = 0; i < writersCount; i++)
@@ -36,7 +37,7 @@ public class Test
             final byte[] result = byteArrayOutputStreams[i].toByteArray();
             if (!Arrays.equals(testData, result))
             {
-                System.out.println(result);
+                System.out.println(Arrays.toString(result));
                 throw new AssertionError("Lab decision wrong!");
             } else
             {

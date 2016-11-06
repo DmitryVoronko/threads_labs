@@ -1,3 +1,4 @@
+
 package com.dmitryvoronko.thirdlab;
 
 import java.io.IOException;
@@ -16,17 +17,15 @@ final class CopyUtil
 
     static void copy(final InputStream src, final OutputStream ... dst) throws IOException
     {
-        // reader-to-writer byte[]-channel
         final int writersCount = dst.length;
         final ArrayList<BlockingQueue<byte[]>> buffers = new ArrayList<>(writersCount);
-        for (int i = 0; i < writersCount; i++)
+        for (final OutputStream ignored : dst)
         {
             buffers.add(new ArrayBlockingQueue<>(64));
         }
 
         final ArrayList<Thread> writers = new ArrayList<>(writersCount);
 
-        // exception-channel from reader/writer threads?
         final AtomicReference<Throwable> ex = new AtomicReference<>();
         final ThreadGroup group = new ThreadGroup("read-write")
         {
@@ -35,22 +34,21 @@ final class CopyUtil
                 ex.set(e);
             }
         };
-        // reader from 'src'
+
         final Thread reader = new Thread(group, () ->
         {
 
             try
-            {              // 'src0' for auto-closing
+            {
                 while (true)
                 {
-                    System.out.println("Read");
-                    final byte[] data = new byte[128];        // new data buffer
-                    final int count = src.read(data, 1, 127); // read up to 127 bytes
-                    data[0] = (byte) count;             // 0-byte is length-field
+                    final byte[] data = new byte[128];
+                    final int count = src.read(data, 1, 127);
+                    data[0] = (byte) count;
                     for (final BlockingQueue<byte[]> buffer : buffers)
                     {
                         buffer.put(data);
-                    }                 // send to writer
+                    }
                     if (count == -1)
                     {
                         break;
@@ -60,10 +58,10 @@ final class CopyUtil
             } catch (final Exception e)
             {
                 group.interrupt();
-            }  // interrupt writer
+            }
         });
         reader.start();
-        // writer to 'dst'
+
         for (int i = 0; i < writersCount; i++)
         {
             final Thread writer = createWriterThread(group, dst[i], buffers.get(i));
@@ -91,25 +89,24 @@ final class CopyUtil
                                              final BlockingQueue<byte[]> buffer)
     {
         return new Thread(group, () ->
+        {
+            try
             {
-                try
-                {      // 'dst0' for auto-closing
-                    while (true)
-                    {
-                        System.out.println("Write");
-                        final byte[] data = buffer.take(); // get new data from reader
-                        if (data[0] == -1)
-                        {
-                            break;
-                        }  // its last data
-                        dst.write(data, 1, data[0]); //
-
-                    }
-                } catch (final Exception e)
+                while (true)
                 {
-                    group.interrupt();
-                }  // interrupt writer
-            });
+                    final byte[] data = buffer.take();
+                    if (data[0] == -1)
+                    {
+                        break;
+                    }
+                    dst.write(data, 1, data[0]);
+
+                }
+            } catch (final Exception e)
+            {
+                group.interrupt();
+            }
+        });
     }
 
 }

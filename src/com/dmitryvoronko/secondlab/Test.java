@@ -1,4 +1,4 @@
-package com.dmitryvoronko.source;
+package com.dmitryvoronko.secondlab;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

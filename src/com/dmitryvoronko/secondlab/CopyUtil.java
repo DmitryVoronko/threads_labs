@@ -1,6 +1,4 @@
-package com.dmitryvoronko.source;
-
-import com.dmitryvoronko.firstlabwithownqueue.MyBlockingQueue;
+package com.dmitryvoronko.secondlab;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -19,6 +17,7 @@ final class CopyUtil
     {
         // reader-to-writer byte[]-channel
         final BlockingQueue<byte[]> buffer = new ArrayBlockingQueue<>(64);
+        final BlockingQueue<byte[]> emptyBuffer = new ArrayBlockingQueue<>(64);
         // exception-channel from reader/writer threads?
         final AtomicReference<Throwable> ex = new AtomicReference<>();
         final ThreadGroup group = new ThreadGroup("read-write")
@@ -37,7 +36,7 @@ final class CopyUtil
                 while (true)
                 {
 //                    System.out.println("Read");
-                    final byte[] data = new byte[128];        // new data buffer
+                    byte[] data = new byte[128];        // new data buffer
                     final int count = src.read(data, 1, 127); // read up to 127 bytes
                     data[0] = (byte) count;             // 0-byte is length-field
                     buffer.put(data);                   // send to writer
@@ -46,6 +45,11 @@ final class CopyUtil
                         break;
                     }
 
+                    data = emptyBuffer.take();
+                    if (data[0] == -1)
+                    {
+                        break;
+                    }  // its last data
                 }
             } catch (final Exception e)
             {
@@ -68,6 +72,10 @@ final class CopyUtil
                     }  // its last data
                     dst.write(data, 1, data[0]); //
 
+
+                                 // 0-byte is length-field
+                    emptyBuffer.put(data);
+                    // send to writer
                 }
             } catch (final Exception e)
             {

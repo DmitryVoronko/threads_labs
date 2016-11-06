@@ -1,4 +1,4 @@
-package com.dmitryvoronko.firstlab;
+package com.dmitryvoronko.firstlabwithownqueue;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,7 +28,6 @@ public final class Test
             } else
             {
                 System.out.println("OK!");
-
             }
         }
 
